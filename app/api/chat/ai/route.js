@@ -19,20 +19,22 @@ export async function POST(req){
               });
         }
 
-        // Initialize OpenAI client with OpenRouter API key and base URL
-        if (!process.env.OPENROUTER_API_KEY) {
+        // Initialize OpenAI client with Azure OpenAI API key and base URL
+        if (!process.env.AZURE_OPENAI_API_KEY) {
             return NextResponse.json({
                 success: false,
-                message: "OpenRouter API key is not configured",
+                message: "Azure OpenAI API key is not configured",
             });
         }
 
         const openai = new OpenAI({
-            baseURL: 'https://openrouter.ai/api/v1',
-            apiKey: process.env.OPENROUTER_API_KEY,
+            baseURL: 'https://lynxa.cognitiveservices.azure.com/openai',
+            apiKey: process.env.AZURE_OPENAI_API_KEY,
             defaultHeaders: {
-                "HTTP-Referer": "https://deepseek-07.vercel.app",
-                "X-Title": "Nexachat AI Chat"
+                "api-key": process.env.AZURE_OPENAI_API_KEY
+            },
+            defaultQuery: {
+                "api-version": "2025-01-01-preview"
             }
         });
 
@@ -74,7 +76,7 @@ export async function POST(req){
 
         const completion = await openai.chat.completions.create({
             messages: conversationMessages,
-            model: "deepseek/deepseek-r1-0528-qwen3-8b:free",
+            model: "gpt-4o-mini", // Azure deployment name
             temperature: 0.7,
             max_tokens: 2000,
         });
