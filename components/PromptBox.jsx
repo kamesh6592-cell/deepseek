@@ -137,47 +137,48 @@ const PromptBox = ({setIsLoading, isLoading}) => {
 
   return (
     <form onSubmit={sendPrompt}
-     className={`w-full ${selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"} bg-[#404045] p-4 rounded-3xl mt-4 transition-all`}>
+     className={`w-full ${selectedChat?.messages.length > 0 ? "max-w-3xl" : "max-w-2xl"} bg-[#404045] p-3 sm:p-4 rounded-2xl sm:rounded-3xl mt-4 transition-all mx-2 sm:mx-0`}>
         <textarea
         onKeyDown={handleKeyDown}
-        className='outline-none w-full resize-none overflow-hidden break-words bg-transparent'
+        className='outline-none w-full resize-none overflow-hidden break-words bg-transparent text-sm sm:text-base placeholder:text-gray-400'
         rows={2}
         placeholder='Message Nexachat' required 
         onChange={(e)=> setPrompt(e.target.value)} value={prompt}/>
 
-        <div className='flex items-center justify-between text-sm'>
-            <div className='flex items-center gap-2'>
+        <div className='flex items-center justify-between text-xs sm:text-sm mt-2'>
+            <div className='flex items-center gap-1.5 sm:gap-2 flex-wrap'>
                 <p onClick={() => setDeepThinkActive(!deepThinkActive)}
-                   className={`flex items-center gap-2 text-xs border px-2 py-1 rounded-full cursor-pointer transition ${
+                   className={`flex items-center gap-1.5 sm:gap-2 text-xs border px-2 py-1 rounded-full cursor-pointer transition whitespace-nowrap ${
                     deepThinkActive 
                         ? 'border-orange-500 bg-orange-500/20 text-orange-400' 
                         : 'border-gray-300/40 hover:bg-gray-500/20'
                    }`}>
-                    <Image className='h-5' src={assets.deepthink_icon} alt=''/>
-                    DeepThink (R1)
+                    <Image className='h-4 sm:h-5 w-4 sm:w-5' src={assets.deepthink_icon} alt=''/>
+                    <span className="hidden sm:inline">DeepThink (R1)</span>
+                    <span className="sm:hidden">R1</span>
                 </p>
                 <p onClick={() => setSearchActive(!searchActive)}
-                   className={`flex items-center gap-2 text-xs border px-2 py-1 rounded-full cursor-pointer transition ${
+                   className={`flex items-center gap-1.5 sm:gap-2 text-xs border px-2 py-1 rounded-full cursor-pointer transition whitespace-nowrap ${
                     searchActive 
                         ? 'border-orange-500 bg-orange-500/20 text-orange-400' 
                         : 'border-gray-300/40 hover:bg-gray-500/20'
                    }`}>
-                    <Image className='h-5' src={assets.search_icon} alt=''/>
+                    <Image className='h-4 sm:h-5 w-4 sm:w-5' src={assets.search_icon} alt=''/>
                     Search
                 </p>
             </div>
 
-            <div className='flex items-center gap-2'>
-            <Image className='w-4 cursor-pointer' src={assets.pin_icon} alt=''/>
+            <div className='flex items-center gap-1.5 sm:gap-2'>
+            <Image className='w-3.5 sm:w-4 cursor-pointer' src={assets.pin_icon} alt=''/>
             {isLoading ? (
-                <button onClick={stopGeneration} className="bg-red-500 hover:bg-red-600 rounded-full p-2 cursor-pointer transition">
-                    <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <button onClick={stopGeneration} className="bg-red-500 hover:bg-red-600 rounded-full p-1.5 sm:p-2 cursor-pointer transition">
+                    <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                         <rect x="6" y="4" width="8" height="12" rx="1"/>
                     </svg>
                 </button>
             ) : (
-                <button className={`${prompt ? "bg-primary" : "bg-[#71717a]"} rounded-full p-2 cursor-pointer`}>
-                    <Image className='w-3.5 aspect-square' src={prompt ? assets.arrow_icon : assets.arrow_icon_dull} alt=''/>
+                <button className={`${prompt ? "bg-primary" : "bg-[#71717a]"} rounded-full p-1.5 sm:p-2 cursor-pointer transition`}>
+                    <Image className='w-3 sm:w-3.5 aspect-square' src={prompt ? assets.arrow_icon : assets.arrow_icon_dull} alt=''/>
                 </button>
             )}
             </div>

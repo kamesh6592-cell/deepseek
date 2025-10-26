@@ -20,14 +20,20 @@ export default function RootLayout({ children }) {
     <ClerkProvider>
       <AppContextProvider>
         <html lang="en">
-          <body className={`${inter.className} antialiased`}>
-            <Toaster toastOptions={
-              {
-                success: {style: { background: "black", color: "white"}},
-                error: {style: { background: "black", color: "white"}}
-              }
-            }/>
-            {children}</body>
+          <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+          </head>
+          <body className={`${inter.className} antialiased overflow-hidden`}>
+            <Toaster 
+              position="top-center"
+              toastOptions={{
+                success: {style: { background: "black", color: "white", fontSize: "14px"}},
+                error: {style: { background: "black", color: "white", fontSize: "14px"}},
+                duration: 3000,
+              }}
+            />
+            {children}
+          </body>
         </html>
       </AppContextProvider>
     </ClerkProvider>

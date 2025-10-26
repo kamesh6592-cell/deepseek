@@ -6,11 +6,40 @@
 
 html{
   @apply scroll-smooth;
+  overflow: hidden;
 }
 
+body {
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbars but maintain functionality */
 ::-webkit-scrollbar{
   display: none;
 }
+
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Touch improvements for mobile */
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  button, [role="button"] {
+    touch-action: manipulation;
+  }
+  
+  textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+  }
+}
+
 .loader div:nth-child(2){
   animation-delay: 0.2s;
 }
@@ -24,4 +53,20 @@ code{
 
 pre{
   border-radius: 10px !important;
+}
+
+/* Prose styles for better mobile typography */
+.prose {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.prose code {
+  word-break: break-all;
+}
+
+.prose pre {
+  overflow-x: auto;
+  max-width: 100%;
 }
