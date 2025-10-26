@@ -22,6 +22,9 @@ const PromptBox = ({setIsLoading, isLoading}) => {
 
         try {
             e.preventDefault();
+            console.log("User:", user);
+            console.log("Selected Chat:", selectedChat);
+            
             if(!user) return toast.error('Login to send message');
             if(isLoading) return toast.error('Wait for the previous prompt response');
 
@@ -52,7 +55,13 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         const {data} = await axios.post('/api/chat/ai', {
             chatId: selectedChat._id,
             prompt
+        }, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
         })
+
+        console.log("API Response:", data);
 
         if(data.success){
             setChats((prevChats)=>prevChats.map((chat)=>chat._id === selectedChat._id ? {...chat, messages: [...chat.messages, data.data]} : chat))
