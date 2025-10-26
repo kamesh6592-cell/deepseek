@@ -6,10 +6,10 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
 
-// Initialize OpenAI client with DeepSeek API key and base URL
+// Initialize OpenAI client with OpenRouter API key and base URL
 const openai = new OpenAI({
-    baseURL: 'https://api.deepseek.com',
-    apiKey: process.env.DEEPSEEK_API_KEY
+    baseURL: 'https://openrouter.ai/api/v1',
+    apiKey: process.env.OPENROUTER_API_KEY
 });
 
 export async function POST(req){
@@ -39,12 +39,18 @@ export async function POST(req){
 
         data.messages.push(userPrompt);
 
-        // Call the DeepSeek API to get a chat completion
+        // Call the OpenRouter API to get a chat completion with DeepSeek model
+        // Include conversation history for better context
+        const conversationMessages = data.messages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+        }));
 
         const completion = await openai.chat.completions.create({
-            messages: [{ role: "user", content: prompt }],
-            model: "deepseek-chat",
-            store: true,
+            messages: conversationMessages,
+            model: "deepseek/deepseek-r1-0528-qwen3-8b:free",
+            temperature: 0.7,
+            max_tokens: 2000,
         });
 
         const message = completion.choices[0].message;
