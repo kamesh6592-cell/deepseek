@@ -8,6 +8,9 @@ import toast from 'react-hot-toast';
 const PromptBox = ({setIsLoading, isLoading}) => {
 
     const [prompt, setPrompt] = useState('');
+    const [deepThinkActive, setDeepThinkActive] = useState(false);
+    const [searchActive, setSearchActive] = useState(false);
+    const [abortController, setAbortController] = useState(null);
     const {user, chats, setChats, selectedChat, setSelectedChat} = useAppContext();
 
     const handleKeyDown = (e)=>{
@@ -17,13 +20,21 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         }
     }
 
+    const stopGeneration = () => {
+        if (abortController) {
+            abortController.abort();
+            setAbortController(null);
+        }
+        setIsLoading(false);
+    };
+
     const sendPrompt = async (e)=>{
         const promptCopy = prompt;
+        const controller = new AbortController();
+        setAbortController(controller);
 
         try {
             e.preventDefault();
-            console.log("User:", user);
-            console.log("Selected Chat:", selectedChat);
             
             if(!user) return toast.error('Login to send message');
             if(isLoading) return toast.error('Wait for the previous prompt response');
@@ -54,17 +65,28 @@ const PromptBox = ({setIsLoading, isLoading}) => {
 
         const {data} = await axios.post('/api/chat/ai', {
             chatId: selectedChat._id,
-            prompt
+            prompt,
+            deepThink: deepThinkActive,
+            search: searchActive
         }, {
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            signal: controller.signal
         })
 
-        console.log("API Response:", data);
-
         if(data.success){
-            setChats((prevChats)=>prevChats.map((chat)=>chat._id === selectedChat._id ? {...chat, messages: [...chat.messages, data.data]} : chat))
+            // Update chat name if provided
+            if (data.chatName && data.chatName !== selectedChat.name) {
+                setSelectedChat(prev => ({ ...prev, name: data.chatName }));
+                setChats(prevChats => prevChats.map(chat => 
+                    chat._id === selectedChat._id 
+                        ? { ...chat, name: data.chatName, messages: [...chat.messages, data.data] }
+                        : chat
+                ));
+            } else {
+                setChats((prevChats)=>prevChats.map((chat)=>chat._id === selectedChat._id ? {...chat, messages: [...chat.messages, data.data]} : chat))
+            }
 
             const message = data.data.content;
             const messageTokens = message.split(" ");
@@ -79,17 +101,20 @@ const PromptBox = ({setIsLoading, isLoading}) => {
                 messages: [...prev.messages, assistantMessage],
             }))
 
+            // Much faster rendering - reduced delay from 100ms to 20ms
             for (let i = 0; i < messageTokens.length; i++) {
                setTimeout(()=>{
-                assistantMessage.content = messageTokens.slice(0, i + 1).join(" ");
-                setSelectedChat((prev)=>{
-                    const updatedMessages = [
-                        ...prev.messages.slice(0, -1),
-                        assistantMessage
-                    ]
-                    return {...prev, messages: updatedMessages}
-                })
-               }, i * 100)
+                if (!controller.signal.aborted) {
+                    assistantMessage.content = messageTokens.slice(0, i + 1).join(" ");
+                    setSelectedChat((prev)=>{
+                        const updatedMessages = [
+                            ...prev.messages.slice(0, -1),
+                            assistantMessage
+                        ]
+                        return {...prev, messages: updatedMessages}
+                    })
+                }
+               }, i * 20) // Reduced from 100ms to 20ms for 5x faster rendering
                 
             }
         }else{
@@ -98,10 +123,15 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         }
 
         } catch (error) {
-            toast.error(error.message);
-            setPrompt(promptCopy);
+            if (error.name === 'AbortError') {
+                toast.error('Generation stopped');
+            } else {
+                toast.error(error.message);
+                setPrompt(promptCopy);
+            }
         } finally {
             setIsLoading(false);
+            setAbortController(null);
         }
     }
 
@@ -112,16 +142,26 @@ const PromptBox = ({setIsLoading, isLoading}) => {
         onKeyDown={handleKeyDown}
         className='outline-none w-full resize-none overflow-hidden break-words bg-transparent'
         rows={2}
-        placeholder='Message DeepSeek' required 
+        placeholder='Message Nexachat' required 
         onChange={(e)=> setPrompt(e.target.value)} value={prompt}/>
 
         <div className='flex items-center justify-between text-sm'>
             <div className='flex items-center gap-2'>
-                <p className='flex items-center gap-2 text-xs border border-gray-300/40 px-2 py-1 rounded-full cursor-pointer hover:bg-gray-500/20 transition'>
+                <p onClick={() => setDeepThinkActive(!deepThinkActive)}
+                   className={`flex items-center gap-2 text-xs border px-2 py-1 rounded-full cursor-pointer transition ${
+                    deepThinkActive 
+                        ? 'border-orange-500 bg-orange-500/20 text-orange-400' 
+                        : 'border-gray-300/40 hover:bg-gray-500/20'
+                   }`}>
                     <Image className='h-5' src={assets.deepthink_icon} alt=''/>
                     DeepThink (R1)
                 </p>
-                <p className='flex items-center gap-2 text-xs border border-gray-300/40 px-2 py-1 rounded-full cursor-pointer hover:bg-gray-500/20 transition'>
+                <p onClick={() => setSearchActive(!searchActive)}
+                   className={`flex items-center gap-2 text-xs border px-2 py-1 rounded-full cursor-pointer transition ${
+                    searchActive 
+                        ? 'border-orange-500 bg-orange-500/20 text-orange-400' 
+                        : 'border-gray-300/40 hover:bg-gray-500/20'
+                   }`}>
                     <Image className='h-5' src={assets.search_icon} alt=''/>
                     Search
                 </p>
@@ -129,9 +169,17 @@ const PromptBox = ({setIsLoading, isLoading}) => {
 
             <div className='flex items-center gap-2'>
             <Image className='w-4 cursor-pointer' src={assets.pin_icon} alt=''/>
-            <button className={`${prompt ? "bg-primary" : "bg-[#71717a]"} rounded-full p-2 cursor-pointer`}>
-                <Image className='w-3.5 aspect-square' src={prompt ? assets.arrow_icon : assets.arrow_icon_dull} alt=''/>
-            </button>
+            {isLoading ? (
+                <button onClick={stopGeneration} className="bg-red-500 hover:bg-red-600 rounded-full p-2 cursor-pointer transition">
+                    <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <rect x="6" y="4" width="8" height="12" rx="1"/>
+                    </svg>
+                </button>
+            ) : (
+                <button className={`${prompt ? "bg-primary" : "bg-[#71717a]"} rounded-full p-2 cursor-pointer`}>
+                    <Image className='w-3.5 aspect-square' src={prompt ? assets.arrow_icon : assets.arrow_icon_dull} alt=''/>
+                </button>
+            )}
             </div>
         </div>
     </form>
