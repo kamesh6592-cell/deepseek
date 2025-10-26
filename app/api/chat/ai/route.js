@@ -34,7 +34,11 @@ export async function POST(req){
 
         const openai = new OpenAI({
             baseURL: 'https://openrouter.ai/api/v1',
-            apiKey: process.env.OPENROUTER_API_KEY
+            apiKey: process.env.OPENROUTER_API_KEY,
+            defaultHeaders: {
+                "HTTP-Referer": "https://deepseek-07.vercel.app",
+                "X-Title": "DeepSeek AI Chat"
+            }
         });
 
         // Find the chat document in the database based on userId and chatId
