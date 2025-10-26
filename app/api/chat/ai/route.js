@@ -28,14 +28,12 @@ export async function POST(req){
         }
 
         const openai = new OpenAI({
-            baseURL: 'https://lynxa.cognitiveservices.azure.com/openai',
             apiKey: process.env.AZURE_OPENAI_API_KEY,
+            baseURL: `https://lynxa.cognitiveservices.azure.com/openai/deployments/gpt-4o-mini`,
+            defaultQuery: { 'api-version': '2025-01-01-preview' },
             defaultHeaders: {
-                "api-key": process.env.AZURE_OPENAI_API_KEY
+                'api-key': process.env.AZURE_OPENAI_API_KEY,
             },
-            defaultQuery: {
-                "api-version": "2025-01-01-preview"
-            }
         });
 
         // Find the chat document in the database based on userId and chatId
@@ -76,7 +74,6 @@ export async function POST(req){
 
         const completion = await openai.chat.completions.create({
             messages: conversationMessages,
-            model: "gpt-4o-mini", // Azure deployment name
             temperature: 0.7,
             max_tokens: 2000,
         });
