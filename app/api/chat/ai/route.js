@@ -5,13 +5,6 @@ import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-
-// Initialize OpenAI client with OpenRouter API key and base URL
-const openai = new OpenAI({
-    baseURL: 'https://openrouter.ai/api/v1',
-    apiKey: process.env.OPENROUTER_API_KEY
-});
-
 export async function POST(req){
     try {
         const {userId} = getAuth(req)
@@ -25,6 +18,19 @@ export async function POST(req){
                 message: "User not authenticated",
               });
         }
+
+        // Initialize OpenAI client with OpenRouter API key and base URL
+        if (!process.env.OPENROUTER_API_KEY) {
+            return NextResponse.json({
+                success: false,
+                message: "OpenRouter API key is not configured",
+            });
+        }
+
+        const openai = new OpenAI({
+            baseURL: 'https://openrouter.ai/api/v1',
+            apiKey: process.env.OPENROUTER_API_KEY
+        });
 
         // Find the chat document in the database based on userId and chatId
         await connectDB()
